@@ -32,8 +32,8 @@ export type CameraPermissionRequestResult = 'granted' | 'denied'
 
 type NativeRecordVideoOptions = Omit<RecordVideoOptions, 'onRecordingError' | 'onRecordingFinished' | 'videoBitRate'> &
 {
-  videoBitRateOverride?: number	
-  videoBitRateMultiplier?: number	
+  videoBitRateOverride?: number
+  videoBitRateMultiplier?: number
 }
 type RefType = React.Component<NativeCameraViewProps> & Readonly<NativeMethods>
 interface CameraState {
@@ -106,6 +106,7 @@ export class Camera extends React.PureComponent<CameraProps, CameraState> {
     this.onPreviewOrientationChanged = this.onPreviewOrientationChanged.bind(this)
     this.onError = this.onError.bind(this)
     this.onCodeScanned = this.onCodeScanned.bind(this)
+    this.onBytesWrittenVideo = this.onBytesWrittenVideo.bind(this)
     this.ref = React.createRef<RefType>()
 
     this.lastFrameProcessor = undefined
@@ -218,12 +219,12 @@ export class Camera extends React.PureComponent<CameraProps, CameraState> {
     }
 
     const nativeOptions: NativeRecordVideoOptions = passThruOptions
-    if (typeof videoBitRate === 'number') {	
-      // If the user passed an absolute number as a bit-rate, we just use this as a full override.	
-      nativeOptions.videoBitRateOverride = videoBitRate	
-    } else if (typeof videoBitRate === 'string' && videoBitRate !== 'normal') {	
-      // If the user passed 'low'/'normal'/'high', we need to apply this as a multiplier to the native bitrate instead of absolutely setting it	
-      nativeOptions.videoBitRateMultiplier = this.getBitRateMultiplier(videoBitRate)	
+    if (typeof videoBitRate === 'number') {
+      // If the user passed an absolute number as a bit-rate, we just use this as a full override.
+      nativeOptions.videoBitRateOverride = videoBitRate
+    } else if (typeof videoBitRate === 'string' && videoBitRate !== 'normal') {
+      // If the user passed 'low'/'normal'/'high', we need to apply this as a multiplier to the native bitrate instead of absolutely setting it
+      nativeOptions.videoBitRateMultiplier = this.getBitRateMultiplier(videoBitRate)
     }
 
     const onRecordCallback = (video?: VideoFile, error?: CameraCaptureError): void => {

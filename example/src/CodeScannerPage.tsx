@@ -46,7 +46,7 @@ export function CodeScannerPage({ navigation }: Props): React.ReactElement {
   // 3. (Optional) enable a torch setting
   const [torch, setTorch] = useState(false)
 
-  // 4. On code scanned, we show an aler to the user
+  // 4. On code scanned, we show an alert to the user
   const isShowingAlert = useRef(false)
   const onCodeScanned = useCallback((codes: Code[], frame: CodeScannerFrame) => {
     console.log(`=== Scanned ${codes.length} codes ===`)
@@ -125,7 +125,7 @@ export function CodeScannerPage({ navigation }: Props): React.ReactElement {
         <IonIcon name="chevron-back" color="white" size={35} />
       </TouchableOpacity>
     </View>
-  ) 
+  )
 }
 
 const styles = StyleSheet.create({

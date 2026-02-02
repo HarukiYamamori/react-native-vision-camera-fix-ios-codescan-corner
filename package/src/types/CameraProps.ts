@@ -59,7 +59,17 @@ export interface CameraProps extends ViewProps {
    * @note If you fully unmount the `<Camera>` component instead of using `isActive={false}`, the Camera will take a bit longer to start again. In return, it will use less resources since the Camera will be completely destroyed when unmounted.
    */
   isActive: boolean
-
+  /**
+   * Keeps the device awake even when {@linkcode isActive} is `false`.
+   *
+   * When enabled, the device screen will remain active and won't go to sleep,
+   * even if the camera session is not actively streaming frames.
+   *
+   * This is useful when you want to keep the camera "warm" and ready to capture
+   * immediately when needed, without the delay of reinitializing the camera session.
+   *
+   * @default false
+   */
   isKeepAwake: boolean
 
   //#region Use-cases
@@ -318,7 +328,6 @@ export interface CameraProps extends ViewProps {
    *
    * This is called everytime the {@linkcode device} or one of the outputs changes.
    */
-  // onInitialized?: () => void
   onInitialized?: (config: { codeScannerFrame: CodeScannerFrame }) => void
 
   /**

@@ -285,7 +285,6 @@ public final class CameraView: UIView, CameraSessionDelegate, PreviewViewDelegat
     }
 
     // Prevent phone from going to sleep
-    // UIApplication.shared.isIdleTimerDisabled = isActive
     UIApplication.shared.isIdleTimerDisabled = isActive || isKeepAwake
   }
 
@@ -330,12 +329,8 @@ public final class CameraView: UIView, CameraSessionDelegate, PreviewViewDelegat
     ])
   }
 
-  // func onSessionInitialized() {
-  //   onInitializedEvent?([:])
-  // }
-
-  func onSessionInitialized(initializedConfig: CameraSession.InitializedConfig) {	
-    onInitializedEvent?(initializedConfig.toJSValue())	
+  func onSessionInitialized(initializedConfig: CameraSession.InitializedConfig) {
+    onInitializedEvent?(initializedConfig.toJSValue())
   }
 
   func onCameraStarted() {

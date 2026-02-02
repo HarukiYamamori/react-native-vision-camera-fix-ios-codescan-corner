@@ -50,8 +50,8 @@ final class CameraConfiguration {
   // isActive (Start/Stop)
   var isActive = false
 
-  // CameraView の UIApplication.shared.isIdleTimerDisabled = isActive 部分	
-  // isActive = falseの場合でもkeepAwakeがtrueの場合はスリープさせない	
+  // CameraView の UIApplication.shared.isIdleTimerDisabled = isActive 部分
+  // isActive = falseの場合でもkeepAwakeがtrueの場合はスリープさせない
   var isKeepAwake = false
 
   // Audio Session

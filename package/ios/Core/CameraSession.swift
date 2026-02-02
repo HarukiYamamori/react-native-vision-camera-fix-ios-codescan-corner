@@ -37,8 +37,17 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
   var didCancelRecording = false
   var orientationManager = OrientationManager()
 
-  var prevScanMilsec = Date().timeIntervalSince1970 * 1000	
+  // ML Kit Barcode Scanner (reused across frames)
+  private lazy var barcodeScanner: BarcodeScanner = {
+    let barcodeOptions = BarcodeScannerOptions(formats: .codaBar) // 一旦codabarのみ
+    return BarcodeScanner.barcodeScanner(options: barcodeOptions)
+  }()
+
+  var prevScanMilsec = Date().timeIntervalSince1970 * 1000
   final let SCAN_INTERVAL_MILSEC: CGFloat = 200;
+
+  // スキャン中フラグ（同時実行を防ぐ）
+  private var isScanning = false
 
   // Callbacks
   weak var delegate: CameraSessionDelegate?
@@ -289,26 +298,38 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
 
       let size = device.activeFormat.videoDimensions
       let now = Date().timeIntervalSince1970 * 1000
-      if CGFloat(now - prevScanMilsec) > SCAN_INTERVAL_MILSEC {
+
+      // 間隔チェックとスキャン中チェック
+      if CGFloat(now - prevScanMilsec) > SCAN_INTERVAL_MILSEC && !isScanning {
         prevScanMilsec = now
+        isScanning = true
+        
         let image = VisionImage(buffer: sampleBuffer)
         // 画像の向きを指定
         image.orientation = imageOrientation(
           deviceOrientation: UIDevice.current.orientation,
           cameraPosition: .back
         )
-        let barcodeOptions = BarcodeScannerOptions(formats: .codaBar) // 一旦codabarのみ
-        let barcodeScanner = BarcodeScanner.barcodeScanner(options: barcodeOptions)
-        // バーコードスキャンの処理を開始
+
+        // バーコードスキャンの処理を開始（再利用されたインスタンスを使用）
         barcodeScanner.process(image) { features, error in
-          guard error == nil, let features = features, !features.isEmpty else {
-            // Error handling
+          defer {
+            // スキャン完了時にフラグをリセット
+            self.isScanning = false
+          }
+          
+          if let error = error {
+            VisionLogger.log(level: .error, message: "ML Kit barcode scanning failed: \(error.localizedDescription)")
+            return
+          }
+          guard let features = features, !features.isEmpty else {
+            // バーコードが見つからなかった（正常な動作）
             return
           }
           // Recognized barcodes
           let codes: [Code] = features.map { barcode in
-            var value: String? = barcode.rawValue
-            var corners: [CGPoint] = barcode.cornerPoints!.map {
+            let value: String? = barcode.rawValue
+            let corners: [CGPoint] = (barcode.cornerPoints ?? []).map {
               return CGPoint(x: $0.cgPointValue.x, y: $0.cgPointValue.y)
             }
             return Code(type: .dataMatrix, value: value, frame: barcode.frame, corners: corners)
@@ -391,16 +412,16 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
     }
   }
 
-  struct InitializedConfig {	
-    let codeScannerFrame: CodeScannerFrame	
-    func toJSValue() -> [String: AnyHashable] {	
-      return [	
-        "codeScannerFrame": [	
-          "width": codeScannerFrame.width,	
-          "height": codeScannerFrame.height,	
-        ],	
+  struct InitializedConfig {
+    let codeScannerFrame: CodeScannerFrame
+    func toJSValue() -> [String: AnyHashable] {
+      return [
+        "codeScannerFrame": [
+          "width": codeScannerFrame.width,
+          "height": codeScannerFrame.height,
+        ],
       ]
-    }	
+    }
   }
 }
 

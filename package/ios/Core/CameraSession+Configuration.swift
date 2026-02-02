@@ -99,12 +99,11 @@ extension CameraSession {
     // Video Output + Frame Processor
     var isVideoOrCodeScannerEnabled = false
     if case .enabled = configuration.video {
-      isVideoOrCodeScannerEnabled = true	
-    } else if case .enabled = configuration.codeScanner {	
-      isVideoOrCodeScannerEnabled = true	
+      isVideoOrCodeScannerEnabled = true
+    } else if case .enabled = configuration.codeScanner {
+      isVideoOrCodeScannerEnabled = true
     }
 
-    // if case .enabled = configuration.video {	
     if isVideoOrCodeScannerEnabled {
       VisionLogger.log(level: .info, message: "Adding Video Data output...")
 
@@ -139,7 +138,6 @@ extension CameraSession {
     VisionLogger.log(level: .info, message: "Successfully configured all outputs!")
 
     // Notify delegate
-    // delegate?.onSessionInitialized()
     guard let device = self.videoDeviceInput?.device else {
       delegate?.onSessionInitialized(initializedConfig: InitializedConfig(codeScannerFrame: CodeScannerFrame(width: 0, height: 0)))
       return

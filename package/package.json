@@ -1,6 +1,6 @@
 {
   "name": "@harukiyamamori/react-native-vision-camera-fix-ios-mlkit",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "react-native-vision-camera with ML Kit barcode scanning for iOS",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
