@@ -1,7 +1,7 @@
 import type { ViewProps } from 'react-native'
 import type { CameraDevice, CameraDeviceFormat, VideoStabilizationMode } from './CameraDevice'
 import type { CameraRuntimeError } from '../CameraError'
-import type { CodeScanner } from './CodeScanner'
+import type { CodeScanner, CodeScannerFrame } from './CodeScanner'
 import type { Frame } from './Frame'
 import type { ISharedValue } from 'react-native-worklets-core'
 import type { SkImage } from '@shopify/react-native-skia'
@@ -59,6 +59,8 @@ export interface CameraProps extends ViewProps {
    * @note If you fully unmount the `<Camera>` component instead of using `isActive={false}`, the Camera will take a bit longer to start again. In return, it will use less resources since the Camera will be completely destroyed when unmounted.
    */
   isActive: boolean
+
+  isKeepAwake: boolean
 
   //#region Use-cases
   /**
@@ -201,23 +203,6 @@ export interface CameraProps extends ViewProps {
    */
   videoHdr?: boolean
   /**
-   * The bit-rate for encoding the video into a file, in Mbps (Megabits per second).
-   *
-   * Bit-rate is dependant on various factors such as resolution, FPS, pixel format (whether it's 10 bit HDR or not), and video codec.
-   *
-   * By default, it will be calculated by the hardware encoder, which takes all those factors into account.
-   *
-   * * `extra-low`: 40% lower than whatever the hardware encoder recommends.
-   * * `low`: 20% lower than whatever the hardware encoder recommends.
-   * * `normal`: The recommended value by the hardware encoder.
-   * * `high`: 20% higher than whatever the hardware encoder recommends.
-   * * `extra-high`: 40% higher than whatever the hardware encoder recommends.
-   * * `number`: Any custom number for the bit-rate, in Mbps.
-   *
-   * @default 'normal'
-   */
-  videoBitRate?: 'extra-low' | 'low' | 'normal' | 'high' | 'extra-high' | number
-  /**
    * Enables or disables HDR Photo Capture via a double capture routine that combines low- and high exposure photos.
    *
    * On Android, {@linkcode photoHdr} uses a vendor-specific "HDR" extension which is not compatible with {@linkcode videoHdr},
@@ -333,7 +318,9 @@ export interface CameraProps extends ViewProps {
    *
    * This is called everytime the {@linkcode device} or one of the outputs changes.
    */
-  onInitialized?: () => void
+  // onInitialized?: () => void
+  onInitialized?: (config: { codeScannerFrame: CodeScannerFrame }) => void
+
   /**
    * Called when the camera started the session. (`isActive={true}`)
    *

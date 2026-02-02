@@ -97,7 +97,15 @@ extension CameraSession {
     }
 
     // Video Output + Frame Processor
+    var isVideoOrCodeScannerEnabled = false
     if case .enabled = configuration.video {
+      isVideoOrCodeScannerEnabled = true	
+    } else if case .enabled = configuration.codeScanner {	
+      isVideoOrCodeScannerEnabled = true	
+    }
+
+    // if case .enabled = configuration.video {	
+    if isVideoOrCodeScannerEnabled {
       VisionLogger.log(level: .info, message: "Adding Video Data output...")
 
       // 1. Add
@@ -123,39 +131,34 @@ extension CameraSession {
       self.videoOutput = videoOutput
     }
 
-    // Code Scanner (ML Kit implementation)
-    if case let .enabled(codeScanner) = configuration.codeScanner {
-      VisionLogger.log(level: .info, message: "Adding Code Scanner output (ML Kit)...")
-      
-      // ML Kit uses AVCaptureVideoDataOutput instead of AVCaptureMetadataOutput
-      // Reuse existing videoOutput if available, otherwise create new one
-      if videoOutput == nil {
-        let videoOutput = AVCaptureVideoDataOutput()
-        guard captureSession.canAddOutput(videoOutput) else {
-          throw CameraError.codeScanner(.notCompatibleWithOutputs)
-        }
-        captureSession.addOutput(videoOutput)
-        videoOutput.setSampleBufferDelegate(self, queue: CameraQueues.codeScannerQueue)
-        videoOutput.alwaysDiscardsLateVideoFrames = true
-        if configuration.isMirrored {
-          videoOutput.isMirrored = true
-          if videoOutput.orientation.isLandscape {
-            videoOutput.orientation = videoOutput.orientation.flipped()
-          }
-        }
-        self.videoOutput = videoOutput
-      } else {
-        // videoOutputが既に存在する場合、codeScannerQueueでも処理できるように設定
-        // ただし、既にvideoQueueで設定されている場合はそのまま使用
-        // ML Kit処理はonVideoFrame内で行うため、追加設定は不要
-      }
-      
-      // Configure ML Kit Barcode Scanner
-      configureCodeScannerMLKit(configuration: codeScanner)
-    } else {
-      // Code Scanner disabled, close ML Kit scanner if exists
-      closeCodeScannerMLKit()
-    }
+    // Code Scanner
+//    if case let .enabled(codeScanner) = configuration.codeScanner {
+//      VisionLogger.log(level: .info, message: "Adding Code Scanner output...")
+//      let codeScannerOutput = AVCaptureMetadataOutput()
+//
+//      // 1. Add
+//      guard captureSession.canAddOutput(codeScannerOutput) else {
+//        throw CameraError.codeScanner(.notCompatibleWithOutputs)
+//      }
+//      captureSession.addOutput(codeScannerOutput)
+//
+//      // 2. Configure
+//      let options = codeScanner.options
+//      codeScannerOutput.setMetadataObjectsDelegate(self, queue: CameraQueues.codeScannerQueue)
+//      for type in codeScanner.options.codeTypes {
+//        // CodeScanner::availableMetadataObjectTypes depends on the connection to the
+//        // AVCaptureSession, so this list is only available after we add the output to the session.
+//        if !codeScannerOutput.availableMetadataObjectTypes.contains(type) {
+//          throw CameraError.codeScanner(.codeTypeNotSupported(codeType: type.descriptor))
+//        }
+//      }
+//      codeScannerOutput.metadataObjectTypes = options.codeTypes
+//      if let rectOfInterest = options.regionOfInterest {
+//        codeScannerOutput.rectOfInterest = rectOfInterest
+//      }
+//
+//      self.codeScannerOutput = codeScannerOutput
+//    }
 
     // Re-initialize Orientations
     configurePreviewOrientation(orientationManager.previewOrientation)
@@ -165,7 +168,14 @@ extension CameraSession {
     VisionLogger.log(level: .info, message: "Successfully configured all outputs!")
 
     // Notify delegate
-    delegate?.onSessionInitialized()
+    // delegate?.onSessionInitialized()
+    guard let device = self.videoDeviceInput?.device else {
+      delegate?.onSessionInitialized(initializedConfig: InitializedConfig(codeScannerFrame: CodeScannerFrame(width: 0, height: 0)))
+      return
+    }
+    let size = device.activeFormat.videoDimensions
+    delegate?.onSessionInitialized(initializedConfig: InitializedConfig(codeScannerFrame: CodeScannerFrame(width: size.width, height: size.height)))
+
   }
 
   // pragma MARK: Video Stabilization
