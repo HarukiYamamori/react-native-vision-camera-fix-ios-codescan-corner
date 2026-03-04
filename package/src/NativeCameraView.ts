@@ -6,6 +6,9 @@ import type { Code, CodeScanner, CodeScannerFrame } from './types/CodeScanner'
 import type { Orientation } from './types/Orientation'
 import type { OnBytesWrittenVideoEvent } from './types/VideoFile'
 
+export interface OnInitializeEvent {
+  codeScannerFrame: CodeScannerFrame
+}
 export interface OnCodeScannedEvent {
   codes: Code[]
   frame: CodeScannerFrame
@@ -35,7 +38,6 @@ export type NativeCameraViewProps = Omit<
   | 'frameProcessor'
   | 'codeScanner'
   | 'fps'
-  | 'videoBitRate'
   | 'onBytesWrittenVideo'
 > & {
   // private intermediate props
@@ -50,7 +52,7 @@ export type NativeCameraViewProps = Omit<
   onViewReady: (event: NativeSyntheticEvent<void>) => void
   onAverageFpsChanged?: (event: NativeSyntheticEvent<AverageFpsChangedEvent>) => void
   // public events wrapped with NativeSyntheticEvent<T>
-  onInitialized?: (event: NativeSyntheticEvent<void>) => void
+  onInitialized?: (event: NativeSyntheticEvent<OnInitializeEvent>) => void
   onError?: (event: NativeSyntheticEvent<OnErrorEvent>) => void
   onCodeScanned?: (event: NativeSyntheticEvent<OnCodeScannedEvent>) => void
   onStarted?: (event: NativeSyntheticEvent<void>) => void

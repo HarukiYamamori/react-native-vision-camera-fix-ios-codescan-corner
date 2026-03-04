@@ -8,6 +8,8 @@
 
 import AVFoundation
 import Foundation
+import MLKitBarcodeScanning
+import MLKitVision
 
 /**
  A fully-featured Camera Session supporting preview, video, photo, frame processing, and code scanning outputs.
@@ -34,6 +36,18 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
   var recordingSizeTimer: DispatchSourceTimer?
   var didCancelRecording = false
   var orientationManager = OrientationManager()
+
+  // ML Kit Barcode Scanner (reused across frames)
+  private lazy var barcodeScanner: BarcodeScanner = {
+    let barcodeOptions = BarcodeScannerOptions(formats: .codaBar) // 一旦codabarのみ
+    return BarcodeScanner.barcodeScanner(options: barcodeOptions)
+  }()
+
+  var prevScanMilsec = Date().timeIntervalSince1970 * 1000
+  final let SCAN_INTERVAL_MILSEC: CGFloat = 200;
+
+  // スキャン中フラグ（同時実行を防ぐ）
+  private var isScanning = false
 
   // Callbacks
   weak var delegate: CameraSessionDelegate?
@@ -266,7 +280,7 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
     }
   }
 
-  final func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+  public final func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
     switch captureOutput {
     case is AVCaptureVideoDataOutput:
       onVideoFrame(sampleBuffer: sampleBuffer, orientation: connection.orientation, isMirrored: connection.isVideoMirrored)
@@ -274,6 +288,73 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
       onAudioFrame(sampleBuffer: sampleBuffer)
     default:
       break
+    }
+
+    if case .enabled = configuration?.codeScanner {
+      guard let device = videoDeviceInput?.device else {
+        // No cameraId set
+        return
+      }
+
+      let size = device.activeFormat.videoDimensions
+      let now = Date().timeIntervalSince1970 * 1000
+
+      // 間隔チェックとスキャン中チェック
+      if CGFloat(now - prevScanMilsec) > SCAN_INTERVAL_MILSEC && !isScanning {
+        prevScanMilsec = now
+        isScanning = true
+        
+        let image = VisionImage(buffer: sampleBuffer)
+        // 画像の向きを指定
+        image.orientation = imageOrientation(
+          deviceOrientation: UIDevice.current.orientation,
+          cameraPosition: .back
+        )
+
+        // バーコードスキャンの処理を開始（再利用されたインスタンスを使用）
+        barcodeScanner.process(image) { features, error in
+          defer {
+            // スキャン完了時にフラグをリセット
+            self.isScanning = false
+          }
+          
+          if let error = error {
+            VisionLogger.log(level: .error, message: "ML Kit barcode scanning failed: \(error.localizedDescription)")
+            return
+          }
+          guard let features = features, !features.isEmpty else {
+            // バーコードが見つからなかった（正常な動作）
+            return
+          }
+          // Recognized barcodes
+          let codes: [Code] = features.map { barcode in
+            let value: String? = barcode.rawValue
+            let corners: [CGPoint] = (barcode.cornerPoints ?? []).map {
+              return CGPoint(x: $0.cgPointValue.x, y: $0.cgPointValue.y)
+            }
+            return Code(type: .dataMatrix, value: value, frame: barcode.frame, corners: corners)
+          }
+          self.delegate?.onCodeScanned(codes: codes, scannerFrame: CodeScannerFrame(width: size.width, height: size.height))
+        }
+      }
+    }
+  }
+
+  func imageOrientation(
+    deviceOrientation: UIDeviceOrientation,
+    cameraPosition: AVCaptureDevice.Position
+  ) -> UIImage.Orientation {
+    switch deviceOrientation {
+    case .portrait:
+      return cameraPosition == .front ? .leftMirrored : .right
+    case .landscapeLeft:
+      return cameraPosition == .front ? .downMirrored : .up
+    case .portraitUpsideDown:
+      return cameraPosition == .front ? .rightMirrored : .left
+    case .landscapeRight:
+      return cameraPosition == .front ? .upMirrored : .down
+    case .faceDown, .faceUp, .unknown:
+      return .up
     }
   }
 
@@ -288,7 +369,7 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
         delegate?.onError(.capture(.unknown(message: error.localizedDescription)))
       }
     }
-
+    
     if let delegate {
       // Call Frame Processor (delegate) for every Video Frame
       delegate.onFrame(sampleBuffer: sampleBuffer, orientation: orientation, isMirrored: isMirrored)
@@ -330,4 +411,17 @@ final class CameraSession: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
       }
     }
   }
+
+  struct InitializedConfig {
+    let codeScannerFrame: CodeScannerFrame
+    func toJSValue() -> [String: AnyHashable] {
+      return [
+        "codeScannerFrame": [
+          "width": codeScannerFrame.width,
+          "height": codeScannerFrame.height,
+        ],
+      ]
+    }
+  }
 }
+

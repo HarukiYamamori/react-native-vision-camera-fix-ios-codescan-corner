@@ -4,7 +4,7 @@ import type { GestureResponderEvent } from 'react-native'
 import { StyleSheet, Text, View } from 'react-native'
 import type { PinchGestureHandlerGestureEvent } from 'react-native-gesture-handler'
 import { PinchGestureHandler, TapGestureHandler } from 'react-native-gesture-handler'
-import type { CameraProps, CameraRuntimeError, PhotoFile, VideoFile } from 'react-native-vision-camera'
+import type { CameraProps, CameraRuntimeError, PhotoFile, VideoFile } from '@harukiyamamori/react-native-vision-camera-fix-ios-mlkit'
 import {
   runAtTargetFps,
   useCameraDevice,
@@ -12,8 +12,8 @@ import {
   useFrameProcessor,
   useLocationPermission,
   useMicrophonePermission,
-} from 'react-native-vision-camera'
-import { Camera } from 'react-native-vision-camera'
+} from '@harukiyamamori/react-native-vision-camera-fix-ios-mlkit'
+import { Camera } from '@harukiyamamori/react-native-vision-camera-fix-ios-mlkit'
 import { CONTENT_SPACING, CONTROL_BUTTON_SIZE, MAX_ZOOM_FACTOR, SAFE_AREA_PADDING, SCREEN_HEIGHT, SCREEN_WIDTH } from './Constants'
 import Reanimated, { Extrapolate, interpolate, useAnimatedGestureHandler, useAnimatedProps, useSharedValue } from 'react-native-reanimated'
 import { useEffect } from 'react'
@@ -105,8 +105,8 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
   const onError = useCallback((error: CameraRuntimeError) => {
     console.error(error)
   }, [])
-  const onInitialized = useCallback(() => {
-    console.log('Camera initialized!')
+  const onInitialized = useCallback((config: { codeScannerFrame: { width: number; height: number } }) => {
+    console.log('[INIT_FRAME]', config?.codeScannerFrame)
     setIsCameraInitialized(true)
   }, [])
   const onMediaCaptured = useCallback(
@@ -199,6 +199,7 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
           <Reanimated.View onTouchEnd={onFocusTap} style={StyleSheet.absoluteFill}>
             <TapGestureHandler onEnded={onDoubleTap} numberOfTaps={2}>
               <ReanimatedCamera
+                isKeepAwake={true}
                 style={StyleSheet.absoluteFill}
                 device={device}
                 isActive={isActive}

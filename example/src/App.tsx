@@ -6,7 +6,7 @@ import { MediaPage } from './MediaPage'
 import { CameraPage } from './CameraPage'
 import { CodeScannerPage } from './CodeScannerPage'
 import type { Routes } from './Routes'
-import { Camera } from 'react-native-vision-camera'
+import { Camera } from '@harukiyamamori/react-native-vision-camera-fix-ios-mlkit'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { StyleSheet } from 'react-native'
 import { DevicesPage } from './DevicesPage'
@@ -29,7 +29,7 @@ export function App(): React.ReactElement | null {
             statusBarStyle: 'dark',
             animationTypeForReplace: 'push',
           }}
-          initialRouteName={showPermissionsPage ? 'PermissionsPage' : 'CameraPage'}>
+          initialRouteName={showPermissionsPage ? 'PermissionsPage' : 'CodeScannerPage'}>
           <Stack.Screen name="PermissionsPage" component={PermissionsPage} />
           <Stack.Screen name="CameraPage" component={CameraPage} />
           <Stack.Screen name="CodeScannerPage" component={CodeScannerPage} />

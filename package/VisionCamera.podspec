@@ -49,8 +49,8 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "12.4" }
-  s.source       = { :git => "https://github.com/mrousavy/react-native-vision-camera.git", :tag => "#{s.version}" }
+  s.platforms    = { :ios => "15.1" }
+  s.source       = { :git => "https://github.com/HarukiYamamori/react-native-vision-camera-fix-ios-codescan-corner", :tag => "#{s.version}" }
 
   s.pod_target_xcconfig = {
     "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) VISION_CAMERA_ENABLE_FRAME_PROCESSORS=#{enableFrameProcessors}",
@@ -68,6 +68,9 @@ Pod::Spec.new do |s|
     core.pod_target_xcconfig = {
       "SWIFT_ACTIVE_COMPILATION_CONDITIONS" => "$(inherited) #{enableLocation ? "VISION_CAMERA_ENABLE_LOCATION" : ""}",
     }
+
+    # ML Kit Barcode Scanning dependency
+    core.dependency "GoogleMLKit/BarcodeScanning"
   end
 
   s.subspec 'React' do |core|

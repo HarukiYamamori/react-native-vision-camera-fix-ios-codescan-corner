@@ -214,7 +214,7 @@ class CameraSession(internal val context: Context, internal val callback: Callba
   interface Callback {
     fun onError(error: Throwable)
     fun onFrame(frame: Frame)
-    fun onInitialized()
+    fun onInitialized(codeScannerFrame: CodeScannerFrame)
     fun onStarted()
     fun onStopped()
     fun onShutter(type: ShutterType)
