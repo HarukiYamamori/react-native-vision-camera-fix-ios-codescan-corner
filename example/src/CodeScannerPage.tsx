@@ -2,9 +2,9 @@ import * as React from 'react'
 import { useCallback, useRef, useState } from 'react'
 import type { AlertButton } from 'react-native'
 import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import type { Code, CodeScannerFrame } from 'react-native-vision-camera'
-import { useCameraDevice, useCodeScanner } from 'react-native-vision-camera'
-import { Camera } from 'react-native-vision-camera'
+import type { Code, CodeScannerFrame } from '@harukiyamamori/react-native-vision-camera-fix-ios-mlkit'
+import { useCameraDevice, useCodeScanner } from '@harukiyamamori/react-native-vision-camera-fix-ios-mlkit'
+import { Camera } from '@harukiyamamori/react-native-vision-camera-fix-ios-mlkit'
 import { CONTENT_SPACING, CONTROL_BUTTON_SIZE, SAFE_AREA_PADDING } from './Constants'
 import { useIsForeground } from './hooks/useIsForeground'
 import { StatusBarBlurBackground } from './views/StatusBarBlurBackground'
@@ -92,7 +92,6 @@ export function CodeScannerPage({ navigation }: Props): React.ReactElement {
       'code-39',
       'code-93',
       'codabar',
-      'gs1-data-bar',
     ],
     onCodeScanned: onCodeScanned,
   })
@@ -108,6 +107,9 @@ export function CodeScannerPage({ navigation }: Props): React.ReactElement {
           codeScanner={codeScanner}
           torch={torch ? 'on' : 'off'}
           isKeepAwake={true}
+          onInitialized={(config) => {
+            console.log('[INIT_FRAME]', config?.codeScannerFrame)
+          }}
           enableZoomGesture={true}
         />
       )}

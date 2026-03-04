@@ -319,8 +319,8 @@ class CameraView(context: Context) :
     invokeOnError(error)
   }
 
-  override fun onInitialized() {
-    invokeOnInitialized()
+  override fun onInitialized(codeScannerFrame: CodeScannerFrame) {
+    invokeOnInitialized(codeScannerFrame)
   }
 
   override fun onStarted() {

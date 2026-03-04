@@ -14,11 +14,17 @@ import com.mrousavy.camera.core.types.CodeType
 import com.mrousavy.camera.core.types.Orientation
 import com.mrousavy.camera.core.types.ShutterType
 
-fun CameraView.invokeOnInitialized() {
-  Log.i(CameraView.TAG, "invokeOnInitialized()")
+fun CameraView.invokeOnInitialized(codeScannerFrame: CodeScannerFrame) {
+  Log.i(CameraView.TAG, "invokeOnInitialized($codeScannerFrame)")
 
   val surfaceId = UIManagerHelper.getSurfaceId(this)
-  val event = CameraInitializedEvent(surfaceId, id)
+  val data = Arguments.createMap()
+  val codeScannerFrameMap = Arguments.createMap()
+  codeScannerFrameMap.putInt("width", codeScannerFrame.width)
+  codeScannerFrameMap.putInt("height", codeScannerFrame.height)
+  data.putMap("codeScannerFrame", codeScannerFrameMap)
+
+  val event = CameraInitializedEvent(surfaceId, id, data)
   this.sendEvent(event)
 }
 

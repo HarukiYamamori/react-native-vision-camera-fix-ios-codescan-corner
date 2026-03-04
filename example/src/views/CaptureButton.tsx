@@ -15,7 +15,7 @@ import Reanimated, {
   useSharedValue,
   withRepeat,
 } from 'react-native-reanimated'
-import type { Camera, PhotoFile, VideoFile } from 'react-native-vision-camera'
+import type { Camera, PhotoFile, VideoFile } from '@harukiyamamori/react-native-vision-camera-fix-ios-mlkit'
 import { CAPTURE_BUTTON_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH } from './../Constants'
 
 const START_RECORDING_DELAY = 200

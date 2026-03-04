@@ -281,7 +281,13 @@ internal suspend fun CameraSession.configureCamera(provider: ProcessCameraProvid
   Log.i(CameraSession.TAG, "Binding ${useCases.size} use-cases...")
   camera = provider.bindToLifecycle(this, cameraSelector, *useCases.toTypedArray())
   // Notify callback
-  callback.onInitialized()
+  val initializedSize =
+  codeScannerOutput?.attachedSurfaceResolution
+    ?: frameProcessorOutput?.attachedSurfaceResolution
+    ?: videoOutput?.attachedSurfaceResolution
+    ?: photoOutput?.attachedSurfaceResolution
+    ?: previewOutput?.attachedSurfaceResolution
+  callback.onInitialized(CodeScannerFrame(initializedSize?.width ?: 0, initializedSize?.height ?: 0))
 
   // Update currentUseCases for next unbind
   currentUseCases = useCases
